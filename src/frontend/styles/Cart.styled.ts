@@ -87,3 +87,11 @@ export const EmptyCartButton = styled(Button)`
     width: inherit;
   }
 `;
+
+export const ErrorMessage = styled.div`
+  background: #fff1f1;
+  border: 1px solid #e5a4a4;
+  border-radius: 8px;
+  color: #8e2525;
+  padding: 12px 14px;
+`;

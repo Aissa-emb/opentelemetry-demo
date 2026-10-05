@@ -19,10 +19,13 @@ import AdProvider from '../../../providers/Ad.provider';
 import { useCart } from '../../../providers/Cart.provider';
 import * as S from '../../../styles/ProductDetail.styled';
 import { useCurrency } from '../../../providers/Currency.provider';
+import { useIndustry } from '../../../industry/IndustryProvider';
+import ExperienceProductDetail from '../../../industry/components/ExperienceProductDetail';
+import { withIndustrySpan } from '../../../industry/telemetry';
 
 const quantityOptions = new Array(10).fill(0).map((_, i) => i + 1);
 
-const ProductDetail: NextPage = () => {
+const AstronomyProductDetail = () => {
   const { push, query } = useRouter();
   const [quantity, setQuantity] = useState(1);
   const {
@@ -30,6 +33,7 @@ const ProductDetail: NextPage = () => {
     cart: { items },
   } = useCart();
   const { selectedCurrency } = useCurrency();
+  const { industry } = useIndustry();
   const productId = query.productId as string;
 
   useEffect(() => {
@@ -46,7 +50,7 @@ const ProductDetail: NextPage = () => {
     } = {} as Product,
   } = useQuery({
       queryKey: ['product', productId, 'selectedCurrency', selectedCurrency],
-      queryFn: () => ApiGateway.getProduct(productId, selectedCurrency),
+      queryFn: () => withIndustrySpan(industry.id, industry.primaryJourney, 'detail_load', () => ApiGateway.getProduct(productId, selectedCurrency), { 'app.product.id': productId }),
       enabled: !!productId,
     }
   ) as { data: Product };
@@ -105,6 +109,11 @@ const ProductDetail: NextPage = () => {
       </Layout>
     </AdProvider>
   );
+};
+
+const ProductDetail: NextPage = () => {
+  const { industry } = useIndustry();
+  return industry.id === 'astronomy' ? <AstronomyProductDetail /> : <Layout><Head><title>{industry.brandName} - Details</title></Head><ExperienceProductDetail /></Layout>;
 };
 
 export default ProductDetail;

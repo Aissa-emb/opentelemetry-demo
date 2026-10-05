@@ -25,9 +25,10 @@ export interface IFormData {
 
 interface IProps {
   onSubmit(formData: IFormData): void;
+  isSubmitting?: boolean;
 }
 
-const CheckoutForm = ({ onSubmit }: IProps) => {
+const CheckoutForm = ({ onSubmit, isSubmitting = false }: IProps) => {
   const [
     {
       email,
@@ -193,7 +194,9 @@ const CheckoutForm = ({ onSubmit }: IProps) => {
         <Link href="/">
           <S.CartButton $type="secondary">Continue Shopping</S.CartButton>
         </Link>
-        <S.CartButton data-cy={CypressFields.CheckoutPlaceOrder} type="submit">Place Order</S.CartButton>
+        <S.CartButton data-cy={CypressFields.CheckoutPlaceOrder} disabled={isSubmitting} type="submit">
+          {isSubmitting ? 'Placing Order…' : 'Place Order'}
+        </S.CartButton>
       </S.SubmitContainer>
     </S.CheckoutForm>
   );

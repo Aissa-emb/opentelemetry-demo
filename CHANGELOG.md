@@ -7,6 +7,12 @@ the release.
 
 ## Unreleased
 
+* [frontend] Add runtime-switchable Banking, Healthcare, Travel, Insurance, and
+  local AI Assistant presenter experiences while preserving the original
+  Astronomy Shop. Add a frontend-only domain BFF so alternate traces use
+  experience-specific records, selection, fee, and transaction language and
+  call only the existing Currency and Payment services where appropriate.
+  Include experience-specific Embrace and OpenTelemetry instrumentation.
 * [collector] Add a data redaction/deletion example: delete, hash, and partially
   mask sensitive attributes with the transform processor, plus a documented
   redaction-processor fallback

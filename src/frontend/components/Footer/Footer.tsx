@@ -6,22 +6,22 @@ import * as S from './Footer.styled';
 import SessionGateway from '../../gateways/Session.gateway';
 import { CypressFields } from '../../utils/enums/CypressFields';
 import PlatformFlag from '../PlatformFlag';
+import { useIndustry } from '../../industry/IndustryProvider';
 
 const currentYear = new Date().getFullYear();
 
-const { userId } = SessionGateway.getSession();
-
 const Footer = () => {
   const [sessionId, setSessionId] = useState('');
+  const { industry } = useIndustry();
 
   useEffect(() => {
-    setSessionId(userId);
+    setSessionId(SessionGateway.getSession().userId);
   }, []);
 
   return (
     <S.Footer>
       <div>
-        <p>This website is hosted for demo purpose only. It is not an actual shop.</p>
+        <p>{industry.demoNotice}</p>
         <p>
           <span data-cy={CypressFields.SessionId}>session-id: {sessionId}</span>
         </p>

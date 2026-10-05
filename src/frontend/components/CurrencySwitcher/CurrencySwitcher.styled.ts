@@ -22,6 +22,8 @@ export const Container = styled.div`
     font-size: 12px;
     color: #605f64;
   }
+
+  @media (max-width: 620px) { margin-left: 0; }
 `;
 
 export const SelectedConcurrency = styled.span`
@@ -33,6 +35,7 @@ export const SelectedConcurrency = styled.span`
   left: 35px;
   width: 20px;
   display: inline-block;
+  @media (max-width: 620px) { left: 25px; width: 14px; }
 `;
 
 export const Arrow = styled.img.attrs({
@@ -62,4 +65,5 @@ export const Select = styled.select`
   padding: 1px 0 0 45px;
   font-size: 16px;
   border-radius: 10px;
+  @media (max-width: 620px) { padding-left: 30px; width: 92px; }
 `;

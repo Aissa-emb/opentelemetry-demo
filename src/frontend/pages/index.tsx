@@ -11,12 +11,21 @@ import ApiGateway from '../gateways/Api.gateway';
 import Banner from '../components/Banner';
 import { CypressFields } from '../utils/enums/CypressFields';
 import { useCurrency } from '../providers/Currency.provider';
+import { useIndustry } from '../industry/IndustryProvider';
+import ExperienceHome from '../industry/components/ExperienceHome';
+import AIExperienceHome from '../industry/components/AIExperienceHome';
+import { useEffect } from 'react';
+import { recordIndustryEvent, withIndustrySpan } from '../industry/telemetry';
 
-const Home: NextPage = () => {
+const AstronomyHome = () => {
   const { selectedCurrency } = useCurrency();
+  const { industry } = useIndustry();
+  useEffect(() => {
+    recordIndustryEvent(industry.id, industry.primaryJourney, 'home_viewed');
+  }, [industry.id, industry.primaryJourney]);
   const { data: productList = [] } = useQuery({
     queryKey: ['products', selectedCurrency],
-    queryFn: () => ApiGateway.listProducts(selectedCurrency),
+    queryFn: () => withIndustrySpan(industry.id, industry.primaryJourney, 'catalog_load', () => ApiGateway.listProducts(selectedCurrency)),
   });
 
   return (
@@ -39,6 +48,20 @@ const Home: NextPage = () => {
           </S.Row>
         </S.Container>
       </S.Home>
+    </Layout>
+  );
+};
+
+const Home: NextPage = () => {
+  const { industry } = useIndustry();
+  if (industry.id === 'astronomy') return <AstronomyHome />;
+
+  return (
+    <Layout>
+      <Head>
+        <title>{industry.brandName} - Home</title>
+      </Head>
+      {industry.id === 'ai' ? <AIExperienceHome /> : <ExperienceHome />}
     </Layout>
   );
 };

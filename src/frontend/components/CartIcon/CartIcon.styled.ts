@@ -4,7 +4,9 @@
 import Image from 'next/image';
 import styled from 'styled-components';
 
-export const CartIcon = styled.a`
+export const CartIcon = styled.button`
+  background: transparent;
+  border: 0;
   position: relative;
   display: block;
   margin-left: 25px;
@@ -13,6 +15,10 @@ export const CartIcon = styled.a`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  min-height: 42px;
+  min-width: 42px;
+  &:focus-visible { outline: 3px solid #f0b34e; outline-offset: 2px; }
+  @media (max-width: 620px) { margin-left: 4px; }
 `;
 
 export const Icon = styled(Image).attrs({
@@ -20,6 +26,16 @@ export const Icon = styled(Image).attrs({
   height: '24',
 })`
   margin-bottom: 3px;
+`;
+
+export const ReviewIcon = styled.svg`
+  fill: none;
+  height: 25px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 25px;
 `;
 
 export const ItemsCount = styled.span`

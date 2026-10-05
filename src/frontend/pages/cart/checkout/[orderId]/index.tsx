@@ -5,7 +5,7 @@ import { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import Ad from '../../../../components/Ad';
 import Button from '../../../../components/Button';
 import Layout from '../../../../components/Layout';
@@ -15,9 +15,13 @@ import AdProvider from '../../../../providers/Ad.provider';
 import { Money } from '../../../../protos/demo';
 import * as S from '../../../../styles/Checkout.styled';
 import { IProductCheckout } from '../../../../types/Cart';
+import { useIndustry } from '../../../../industry/IndustryProvider';
+import ExperienceConfirmation from '../../../../industry/components/ExperienceConfirmation';
+import { recordIndustryEvent } from '../../../../industry/telemetry';
 
-const Checkout: NextPage = () => {
+const AstronomyCheckout = () => {
   const { query } = useRouter();
+  const { industry } = useIndustry();
   const { orderId, items = [], shippingAddress, shippingCost = { units: 0, currencyCode: 'USD', nanos: 0 } } = JSON.parse((query.order || '{}') as string) as IProductCheckout;
 
   const orderTotal = useMemo<Money>(() => {
@@ -38,6 +42,10 @@ const Checkout: NextPage = () => {
       currencyCode: shippingCost.currencyCode || 'USD',
     };
   }, [items, shippingCost]);
+
+  useEffect(() => {
+    if (orderId) recordIndustryEvent(industry.id, industry.primaryJourney, 'confirmation_rendered', { 'app.order.id': orderId });
+  }, [industry.id, industry.primaryJourney, orderId]);
 
   return (
     <AdProvider
@@ -121,6 +129,11 @@ const Checkout: NextPage = () => {
       </Layout>
     </AdProvider>
   );
+};
+
+const Checkout: NextPage = () => {
+  const { industry } = useIndustry();
+  return industry.id === 'astronomy' ? <AstronomyCheckout /> : <Layout><Head><title>{industry.brandName} - Confirmation</title></Head><ExperienceConfirmation /></Layout>;
 };
 
 export default Checkout;

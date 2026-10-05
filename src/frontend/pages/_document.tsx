@@ -5,7 +5,15 @@ import Document, { DocumentContext, Html, Head, Main, NextScript } from 'next/do
 import { ServerStyleSheet } from 'styled-components';
 import {context, propagation} from "@opentelemetry/api";
 
-const { ENV_PLATFORM, WEB_OTEL_SERVICE_NAME, PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, OTEL_COLLECTOR_HOST} = process.env;
+const {
+  ENV_PLATFORM,
+  WEB_OTEL_SERVICE_NAME,
+  PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+  OTEL_COLLECTOR_HOST,
+  NEXT_PUBLIC_EMBRACE_APP_ID,
+  NEXT_PUBLIC_EMBRACE_APP_VERSION,
+  NEXT_PUBLIC_EMBRACE_ENVIRONMENT,
+} = process.env;
 
 export default class MyDocument extends Document<{ envString: string }> {
   static async getInitialProps(ctx: DocumentContext) {
@@ -26,13 +34,15 @@ export default class MyDocument extends Document<{ envString: string }> {
           ? `http://${OTEL_COLLECTOR_HOST}:4318/v1/traces`
           : PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT;
 
-      const envString = `
-        window.ENV = {
-          NEXT_PUBLIC_PLATFORM: '${ENV_PLATFORM}',
-          NEXT_PUBLIC_OTEL_SERVICE_NAME: '${WEB_OTEL_SERVICE_NAME}',
-          NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: '${otlpTracesEndpoint}',
-          IS_SYNTHETIC_REQUEST: '${isSyntheticRequest}',
-        };`;
+      const envString = `window.ENV = ${JSON.stringify({
+        NEXT_PUBLIC_PLATFORM: ENV_PLATFORM,
+        NEXT_PUBLIC_OTEL_SERVICE_NAME: WEB_OTEL_SERVICE_NAME,
+        NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: otlpTracesEndpoint,
+        NEXT_PUBLIC_EMBRACE_APP_ID: NEXT_PUBLIC_EMBRACE_APP_ID || 'omhea',
+        NEXT_PUBLIC_EMBRACE_APP_VERSION: NEXT_PUBLIC_EMBRACE_APP_VERSION || 'web-local',
+        NEXT_PUBLIC_EMBRACE_ENVIRONMENT: NEXT_PUBLIC_EMBRACE_ENVIRONMENT || ENV_PLATFORM || 'local',
+        IS_SYNTHETIC_REQUEST: String(isSyntheticRequest),
+      })};`;
       return {
         ...initialProps,
         styles: [initialProps.styles, sheet.getStyleElement()],

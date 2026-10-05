@@ -17,7 +17,13 @@ const defaultSession: Readonly<ISession> = Object.freeze({
 const SessionGateway = () => ({
   getSession(): ISession {
     if (typeof window === 'undefined') return defaultSession;
-    const sessionString = localStorage.getItem(sessionKey);
+    let sessionString: string | null = null;
+
+    try {
+      sessionString = localStorage.getItem(sessionKey);
+    } catch {
+      return defaultSession;
+    }
 
     if (sessionString) {
       try {
@@ -29,13 +35,25 @@ const SessionGateway = () => ({
         console.warn('Failed to parse session from localStorage', e);
       }
     }
-    localStorage.setItem(sessionKey, JSON.stringify(defaultSession));
+    try {
+      localStorage.setItem(sessionKey, JSON.stringify(defaultSession));
+    } catch {
+      return defaultSession;
+    }
     return defaultSession;
   },
   setSessionValue<K extends keyof ISession>(key: K, value: ISession[K]) {
     const session = this.getSession();
 
-    localStorage.setItem(sessionKey, JSON.stringify({ ...session, [key]: value }));
+    try {
+      localStorage.setItem(sessionKey, JSON.stringify({ ...session, [key]: value }));
+    } catch {
+      // The in-memory default still allows explicit URL demo mode to work.
+    }
+  },
+  getScopedCartUserId(industry: string): string {
+    const { userId } = this.getSession();
+    return industry === 'astronomy' ? userId : `${userId}:${industry}`;
   },
 });
 

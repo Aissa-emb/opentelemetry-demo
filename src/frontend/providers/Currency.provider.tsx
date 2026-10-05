@@ -5,8 +5,8 @@ import { createContext, useCallback, useContext, useMemo, useState, useEffect } 
 import { useQuery } from '@tanstack/react-query';
 import ApiGateway from '../gateways/Api.gateway';
 import SessionGateway from '../gateways/Session.gateway';
-
-const { currencyCode } = SessionGateway.getSession();
+import { useIndustry } from '../industry/IndustryProvider';
+import { withIndustrySpan } from '../industry/telemetry';
 
 interface IContext {
   currencyCodeList: string[];
@@ -27,14 +27,21 @@ interface IProps {
 export const useCurrency = () => useContext(Context);
 
 const CurrencyProvider = ({ children }: IProps) => {
+  const { industry } = useIndustry();
   const { data: currencyCodeListUnsorted = [] } = useQuery({
-    queryKey: ['currency'],
-    queryFn: ApiGateway.getSupportedCurrencyList
+    queryKey: ['currency', industry.id],
+    queryFn: () => withIndustrySpan(
+      industry.id,
+      industry.primaryJourney,
+      'currency_load',
+      ApiGateway.getSupportedCurrencyList
+    ),
+    enabled: industry.id !== 'ai',
   });
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
 
   useEffect(() => {
-    setSelectedCurrency(currencyCode);
+    setSelectedCurrency(SessionGateway.getSession().currencyCode);
   }, []);
 
   const onSelectCurrency = useCallback((currencyCode: string) => {

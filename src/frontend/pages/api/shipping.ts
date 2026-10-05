@@ -6,13 +6,20 @@ import InstrumentationMiddleware from '../../utils/telemetry/InstrumentationMidd
 import ShippingGateway from '../../gateways/http/Shipping.gateway';
 import { Address, CartItem, Empty, Money } from '../../protos/demo';
 import CurrencyGateway from '../../gateways/rpc/Currency.gateway';
+import { requestDomainIndustry } from '../../industry/backendContext';
+import { getDomainFee } from '../../industry/backendRecords';
 
 type TResponse = Money | Empty;
 
-const handler = async ({ method, query }: NextApiRequest, res: NextApiResponse<TResponse>) => {
+const handler = async (request: NextApiRequest, res: NextApiResponse<TResponse>) => {
+  const { method, query } = request;
   switch (method) {
     case 'GET': {
       const { itemList = '', currencyCode = 'USD', address = '' } = query;
+      const domainIndustry = requestDomainIndustry(request);
+      if (domainIndustry) {
+        return res.status(200).json(await getDomainFee(domainIndustry, currencyCode as string));
+      }
       const { costUsd } = await ShippingGateway.getShippingCost(JSON.parse(itemList as string) as CartItem[],
           JSON.parse(address as string) as Address);
       const cost = await CurrencyGateway.convert(costUsd!, currencyCode as string);

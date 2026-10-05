@@ -3,18 +3,21 @@
 
 import Header from '../Header';
 import Footer from '../Footer';
+import { useIndustry } from '../../industry/IndustryProvider';
+import * as S from './Layout.styled';
 
 interface IProps {
   children: React.ReactNode;
 }
 
 const Layout = ({ children }: IProps) => {
+  const { industry } = useIndustry();
   return (
-    <>
-      <Header />
+    <S.Shell $colors={industry.colors} data-industry={industry.id}>
+      {industry.id !== 'ai' ? <Header /> : null}
       <main>{children}</main>
-      <Footer />
-    </>
+      {industry.id !== 'ai' ? <Footer /> : null}
+    </S.Shell>
   );
 };
 

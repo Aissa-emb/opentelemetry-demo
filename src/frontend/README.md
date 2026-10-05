@@ -24,3 +24,21 @@ from the root folder.
 It will start all of the required backend services
 and within the container simply run `npm run dev`.
 After that the app should be available at <http://localhost:8080/>.
+
+## Industry experiences
+
+The presenter can switch the running frontend between the original OTel
+Astronomy Shop and Banking, Healthcare, Travel, Insurance, or AI Assistant
+experiences from **Settings**. Direct links use customer-facing routes such as `/accounts`, `/patient`, `/flights`, `/policies`, and `/chat`. See
+[the industry experience guide](../../docs/industry-experiences.md) for data
+mapping, state isolation, telemetry, failure stories, and testing details.
+
+The browser initializes the Embrace Web SDK with the existing public demo app
+ID (`omhea`). Runtime environment variables can override the app ID, version,
+and environment. Every experience emits its own bounded breadcrumbs, logs,
+spans, and API operation labels so a Banking session never reads like an
+ecommerce checkout. Astronomy alone retains the original commerce service graph.
+The four verticals use semantic browser API routes and a frontend BFF domain layer,
+calling only the existing Currency and Payment interfaces where they fit.
+AI Assistant calls only `/api/chat/respond`; its embedded prompt-specific engine
+needs no external API key and never introduces stock shopping Agent/MCP spans.

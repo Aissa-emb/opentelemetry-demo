@@ -8,6 +8,21 @@ attribute_groups:
     brief: Frontend service attributes
     stability: stable
     attributes:
-      - ref: demo.synthetic_request
+      - ref: app.synthetic_request
+      - ref: app.experience.name
+      - ref: app.experience.next
+      - ref: app.user_journey
+      - ref: app.action.name
+      - ref: app.ai.intent
+      - ref: app.ai.response_mode
+      - ref: app.backend.domain
+      - ref: app.backend.resource
+      - ref: app.backend.original_route
+      - ref: app.product.id
+      - ref: app.order.id
+      - ref: app.record.id
+      - ref: app.transaction.id
+      - ref: app.operation.name
+      - ref: app.workflow.step
       - ref: session.id
       - ref: enduser.id

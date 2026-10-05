@@ -12,6 +12,11 @@
 
 
 services:
+  frontend:
+    environment:
+      - AGENT_ADDR
+      - ASSISTANT_BACKEND_MODE=agent
+
   # Agent
   agent:
     image: ${IMAGE_NAME}:${DEMO_VERSION}-agent

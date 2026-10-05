@@ -12,6 +12,7 @@ RUN npm ci
 
 COPY ./src/frontend/components/ components/
 COPY ./src/frontend/gateways/ gateways/
+COPY ./src/frontend/industry/ industry/
 COPY ./src/frontend/pages/ pages/
 COPY ./src/frontend/protos/ protos/
 COPY ./src/frontend/providers/ providers/
@@ -22,6 +23,7 @@ COPY ./src/frontend/types/ types/
 COPY ./src/frontend/utils/enums/ utils/enums/
 COPY ./src/frontend/utils/telemetry/ utils/telemetry/
 COPY ./src/frontend/utils/imageLoader.js utils/imageLoader.js
+COPY ./src/frontend/utils/embrace.ts utils/embrace.ts
 COPY ./src/frontend/utils/Request.ts utils/Request.ts
 
 COPY ./src/frontend/next.config.js next.config.js

@@ -7,19 +7,29 @@ import request from '../utils/Request';
 import { AttributeNames } from '../utils/enums/AttributeNames';
 import SessionGateway from './Session.gateway';
 import { context, propagation } from "@opentelemetry/api";
+import { isIndustryId } from '../industry/registry';
+import { AssistantResponse } from '../industry/aiAssistant';
 
-const { userId } = SessionGateway.getSession();
+interface AssistantMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
+
+export interface AssistantGatewayResponse {
+  response: AssistantResponse;
+  backend: 'agent' | 'embedded_backend' | 'agent_fallback';
+}
 
 const basePath = '/api';
 
 const Apis = () => ({
-  getCart(currencyCode: string) {
+  getCart(currencyCode: string, userId = SessionGateway.getSession().userId) {
     return request<IProductCart>({
       url: `${basePath}/cart`,
       queryParams: { sessionId: userId, currencyCode },
     });
   },
-  addCartItem({ currencyCode, ...item }: CartItem & { currencyCode: string }) {
+  addCartItem({ currencyCode, userId, ...item }: CartItem & { currencyCode: string; userId: string }) {
     return request<Cart>({
       url: `${basePath}/cart`,
       body: { item, userId },
@@ -27,7 +37,7 @@ const Apis = () => ({
       method: 'POST',
     });
   },
-  emptyCart() {
+  emptyCart(userId = SessionGateway.getSession().userId) {
     return request<undefined>({
       url: `${basePath}/cart`,
       method: 'DELETE',
@@ -73,7 +83,7 @@ const Apis = () => ({
       queryParams: { currencyCode },
     });
   },
-  listRecommendations(productIds: string[], currencyCode: string) {
+  listRecommendations(productIds: string[], currencyCode: string, userId = SessionGateway.getSession().userId) {
     return request<Product[]>({
       url: `${basePath}/recommendations`,
       queryParams: {
@@ -91,6 +101,20 @@ const Apis = () => ({
       },
     });
   },
+  respondToAssistant(message: string, history: AssistantMessage[]) {
+    return request<AssistantGatewayResponse>({
+      url: `${basePath}/chat/respond`,
+      body: { message, history },
+      method: 'POST',
+    });
+  },
+  completeGuidedAction(actionId: string, fields: Record<string, string>) {
+    return request<{ eventId: string; notificationSent: boolean; status: 'accepted' }>({
+      url: `${basePath}/experience/action`,
+      body: { actionId, fields },
+      method: 'POST',
+    });
+  },
 });
 
 /**
@@ -106,10 +130,15 @@ const ApiGateway = new Proxy(Apis(), {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return function (...args: any[]) {
+      const { userId } = SessionGateway.getSession();
       const baggage = propagation.getActiveBaggage() || propagation.createBaggage();
+      const industryValue = baggage.getEntry(AttributeNames.INDUSTRY)?.value;
+      const effectiveUserId = industryValue && isIndustryId(industryValue)
+        ? SessionGateway.getScopedCartUserId(industryValue)
+        : userId;
       const newBaggage = baggage
         .setEntry(AttributeNames.SESSION_ID, { value: userId })
-        .setEntry(AttributeNames.ENDUSER_ID, { value: userId });
+        .setEntry(AttributeNames.ENDUSER_ID, { value: effectiveUserId });
       const newContext = propagation.setBaggage(context.active(), newBaggage);
       return context.with(newContext, () => {
         return Reflect.apply(originalFunction, undefined, args);

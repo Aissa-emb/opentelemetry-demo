@@ -4,6 +4,7 @@
 import '../styles/globals.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App, { AppContext, AppProps } from 'next/app';
+import { useState } from 'react';
 import CurrencyProvider from '../providers/Currency.provider';
 import CartProvider from '../providers/Cart.provider';
 import { ThemeProvider } from 'styled-components';
@@ -12,6 +13,11 @@ import FrontendTracer from '../utils/telemetry/FrontendTracer';
 import SessionGateway from '../gateways/Session.gateway';
 import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
 import { FlagdWebProvider } from '@openfeature/flagd-web-provider';
+import IndustryProvider from '../industry/IndustryProvider';
+import { IndustryId } from '../industry/types';
+import { readIndustryCookie, resolveIndustry } from '../industry/resolveIndustry';
+import { initEmbrace } from '../utils/embrace';
+import { industryFromPath } from '../industry/routes';
 
 declare global {
   interface Window {
@@ -19,12 +25,16 @@ declare global {
       NEXT_PUBLIC_PLATFORM?: string;
       NEXT_PUBLIC_OTEL_SERVICE_NAME?: string;
       NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
+      NEXT_PUBLIC_EMBRACE_APP_ID?: string;
+      NEXT_PUBLIC_EMBRACE_APP_VERSION?: string;
+      NEXT_PUBLIC_EMBRACE_ENVIRONMENT?: string;
       IS_SYNTHETIC_REQUEST?: string;
     };
   }
 }
 
 if (typeof window !== 'undefined') {
+  initEmbrace();
   FrontendTracer();
   if (window.location) {
     const session = SessionGateway.getSession();
@@ -56,18 +66,24 @@ if (typeof window !== 'undefined') {
   }
 }
 
-const queryClient = new QueryClient();
+interface IndustryAppProps extends AppProps {
+  initialIndustry: IndustryId;
+}
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps, initialIndustry }: IndustryAppProps) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <ThemeProvider theme={Theme}>
       <OpenFeatureProvider>
         <QueryClientProvider client={queryClient}>
-          <CurrencyProvider>
-            <CartProvider>
-              <Component {...pageProps} />
-            </CartProvider>
-          </CurrencyProvider>
+          <IndustryProvider initialIndustry={initialIndustry}>
+            <CurrencyProvider>
+              <CartProvider>
+                <Component {...pageProps} />
+              </CartProvider>
+            </CurrencyProvider>
+          </IndustryProvider>
         </QueryClientProvider>
       </OpenFeatureProvider>
     </ThemeProvider>
@@ -76,8 +92,16 @@ function MyApp({ Component, pageProps }: AppProps) {
 
 MyApp.getInitialProps = async (appContext: AppContext) => {
   const appProps = await App.getInitialProps(appContext);
+  const cookieHeader = appContext.ctx.req?.headers.cookie || (typeof document !== 'undefined' ? document.cookie : '');
+  const persistedIndustry = readIndustryCookie(cookieHeader);
+  const requestPath = (appContext.ctx.asPath || '/').split(/[?#]/)[0] || '/';
+  const pathIndustry = industryFromPath(requestPath);
+  const hasLegacySelection = typeof appContext.ctx.query.industry === 'string';
+  const initialIndustry = requestPath === '/' && !hasLegacySelection
+    ? 'astronomy'
+    : resolveIndustry(appContext.ctx.query.industry, pathIndustry || persistedIndustry);
 
-  return { ...appProps };
+  return { ...appProps, initialIndustry };
 };
 
 export default MyApp;

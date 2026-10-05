@@ -10,11 +10,19 @@ import CartDetail from '../../components/Cart/CartDetail';
 import EmptyCart from '../../components/Cart/EmptyCart';
 import { useCart } from '../../providers/Cart.provider';
 import AdProvider from '../../providers/Ad.provider';
+import { useIndustry } from '../../industry/IndustryProvider';
+import ExperienceCart from '../../industry/components/ExperienceCart';
+import { useEffect } from 'react';
+import { recordIndustryEvent } from '../../industry/telemetry';
 
-const Cart: NextPage = () => {
+const AstronomyCart = () => {
   const {
     cart: { items },
   } = useCart();
+  const { industry } = useIndustry();
+  useEffect(() => {
+    recordIndustryEvent(industry.id, industry.primaryJourney, 'cart_load');
+  }, [industry.id, industry.primaryJourney]);
 
   return (
     <AdProvider
@@ -32,6 +40,11 @@ const Cart: NextPage = () => {
       </Layout>
     </AdProvider>
   );
+};
+
+const Cart: NextPage = () => {
+  const { industry } = useIndustry();
+  return industry.id === 'astronomy' ? <AstronomyCart /> : <Layout><Head><title>{industry.brandName} - {industry.terminology.cart}</title></Head><ExperienceCart /></Layout>;
 };
 
 export default Cart;
